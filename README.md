@@ -4,3 +4,5 @@ API key is set with
 export DEMO_API_KEY=
 
 Reporting API uses a unique footprint id which needs to be retrieved programatically or via https://api-docs.watershed.com/v1/docs/getting-started
+
+For Finance sample files, generic download templates were used but some columns have been renamed to match expected API names so please use these templates. Or if you want to create a PR to use the generic column headings & rename for the REST calls... :)
