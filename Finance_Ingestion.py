@@ -1,11 +1,9 @@
-from re import search
-
 import requests
 import json
 import os
 import pandas as pd
 
-USER_FOLDER = '/users/'+os.getenv("USER")+'/Documents/sample data/Customer/FinanceCustomer/api/'
+USER_FOLDER='./'
 TOKEN = os.getenv("DEMO_API_KEY", "blank")
 
 limit='10000'
@@ -45,24 +43,6 @@ def post(url, body):
         print(f'-> error: {request.text}')
     return request.json()
 
-def unzip_file(zip_file_path, extract_to_directory):
-    # Ensure the directory to extract to exists
-    os.makedirs(extract_to_directory, exist_ok=True)
-
-    # Open the zip file
-
-def download_file(url, local_filename):
-    # Send a GET request to the specified URL
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()  # Raise an error for bad responses
-        # Open a local file for writing in binary mode
-        with open(local_filename, 'wb') as f:
-            # Write the response content in chunks to the file
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-    print(f"Downloaded {local_filename}")
-
-
 def iterate_json(json_obj, action, endpoint):
     if isinstance(json_obj, dict):
         for key, value in json_obj.items():
@@ -95,7 +75,7 @@ def iterate_json_return_id(json_obj, assets_ids_list, assets_names_list, key_to_
             iterate_json_return_id(item, assets_ids_list, assets_names_list, key_to_check, value_to_get)
     else:
         key=json_obj.items
-        if key == key_to_check: #don't think it ever gets here as lowest level element in json is a list so handled above
+        if key == key_to_check: #don't think it ever gets here as lowest level element in our retrieved json is a list so handled above
             return
 
 def get_asset_id(assetlist, searchterm):
