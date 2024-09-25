@@ -1,10 +1,14 @@
+
 import requests
 import json
 import os
 import pandas as pd
 
-USER_FOLDER='./'
+#USER_FOLDER='./'
+USER_FOLDER=os.getenv('FINANCE_API_FILES')
 TOKEN = os.getenv("DEMO_API_KEY", "blank")
+print (USER_FOLDER)
+print (TOKEN)
 
 limit='10000'
 def fullurl(url):
@@ -90,7 +94,7 @@ df = pd.read_csv(USER_FOLDER+"Funds.csv")
 print ('retrieving list of current Funds to delete')
 Funds = get(f'v1/finance/funds?limit='+limit)
 iterate_json(Funds,'delete', 'funds/')
-print(f'posting new funds list from ',USER_FOLDER,'/funds.csv')
+print(f'posting new funds list from ',USER_FOLDER,'funds.csv')
 #POST new funds from csv
 funds_data = json.loads(df.to_json(orient="records"))
 for record in funds_data:
@@ -104,7 +108,7 @@ iterate_json(Assets,'delete', 'asset-corporates/')
 
 #POST new Corporate Assets from csv
 df = pd.read_csv(USER_FOLDER+"Assets.csv")
-print(f'posting new assets list from ',USER_FOLDER,'/Assets.csv')
+print(f'posting new assets list from ',USER_FOLDER,'Assets.csv')
 assets_data = json.loads(df.to_json(orient="records"))
 for record in assets_data:
     print(record)
@@ -126,10 +130,12 @@ asset_lookups = pd.DataFrame({'assetCorporateId': assets_ids_list, 'name': asset
 # there HAS to be an easier way to do the above, just pulling two columns out of json nested records?
 
 # join data returned from REST call with new annual data for assets Using the name of the asset as join index
+if 'Asset name [Required]' in annual_data_df.columns:
+    annual_data_df.rename(columns={'Asset name [Required]':'Asset'}, inplace=True)
 merged_annual_data = pd.merge(annual_data_df, asset_lookups, left_on='Asset', right_on='name', how='left')
 
 #iterate through joined data, submitting new annual data one asset at a time
-print(f'Posting new annual data from join of retrieved assets and ',USER_FOLDER,'/annual_data.csv')
+print(f'Posting new annual data from join of retrieved assets and ',USER_FOLDER,'annual_data.csv')
 annual_data = json.loads(merged_annual_data.to_json(orient="records"))
 for record in annual_data:
     print(record)
@@ -164,9 +170,11 @@ annual_data_df=pd.DataFrame({'assetYearId':assets_ids_list, 'Asset': assets_name
 # join data returned from REST call with new annual data (also from REST call for this holdings buildout), using the name of the asset as join index
 merged_annual_data = pd.merge(annual_data_df, asset_lookups, left_on='Asset', right_on='assetCorporateId', how='left')
 
-print(f'Reading New Holdings from file ',USER_FOLDER,'/Holdings.csv')
+print(f'Reading New Holdings from file ',USER_FOLDER,'Holdings.csv')
 annual_holdings_df = pd.read_csv(USER_FOLDER+"Holdings.csv")
 # join data returned from REST calls with new annual holdings for assets Using the name of the asset as join index and bring in fund ID and asset year ID - full version would need to match assetyear IDs on year
+if 'Asset name [Required]' in annual_holdings_df:
+    annual_holdings_df.rename(columns={'Asset name [Required]':'Asset'}, inplace=True)
 holdings_merged_annual_data =pd.merge(merged_annual_data, annual_holdings_df,left_on='name',right_on='Asset',how='left')
 
 ### add the fund id last once you get holdings data which includes Fund name!!
@@ -177,6 +185,8 @@ fund_ids_list=[]
 fund_names_list=[]
 iterate_json_return_id(funds, fund_ids_list, fund_names_list, 'id', 'name') #use a tweaked iterate json function to populate the two lists
 funds_data_df=pd.DataFrame({'fundId':fund_ids_list, 'FundName': fund_names_list}) #we use this later after we read in the holdings
+if 'Fund name [Required]' in holdings_merged_annual_data:
+    holdings_merged_annual_data.rename(columns={'Fund name [Required]':'Fund name'}, inplace=True)
 funds_merged_annual_data = pd.merge(holdings_merged_annual_data,funds_data_df,left_on='Fund name', right_on='FundName', how='left')
 funds_merged_annual_data.rename(columns={'Year [Required]': 'year', 'Asset class [Required]':'assetClass', 'Currency [Required]':'currencyCode', 'Outstanding amount [Required]':'outstandingAmountNative'}, inplace=True)
 funds_merged_annual_data.drop(columns=['name','Fund name','FundName','Asset_x','Asset_y'], inplace=True)
