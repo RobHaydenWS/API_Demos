@@ -196,6 +196,9 @@ if 'Year [Required]' in annual_data_df.columns:
     annual_data_df.rename(columns={'Year [Required]':'year'}, inplace=True)
 if 'Asset value [Required]' in annual_data_df.columns:
     annual_data_df.rename(columns={'Asset value [Required]':'valueNative'}, inplace=True)
+if 'Asset value [Required to calculate financed emissions for all asset classes but commercial lines of insurance]' in annual_data_df.columns:
+    annual_data_df.rename(columns={'Asset value [Required to calculate financed emissions for all asset classes but commercial lines of insurance]':'valueNative'}, inplace=True)
+
 rename_scope_overrides(annual_data_df)
 
 annual_data_df['valueNative']=annual_data_df['valueNative'].apply(clean_numeric_string)
@@ -213,6 +216,8 @@ asset_lookups_df = pd.DataFrame({'assetCorporateId': assets_ids_list, 'name': as
 # join data returned from REST call with new annual data for assets Using the name of the asset as join index
 if 'Asset name [Required]' in annual_data_df.columns:
     annual_data_df.rename(columns={'Asset name [Required]':'Asset'}, inplace=True)
+if 'Revenue [Required for corporate assets]' in annual_data_df.columns:
+    annual_data_df.rename(columns={'Revenue [Required for corporate assets]':'revenueNative'}, inplace=True)
 merged_annual_data_df = pd.merge(annual_data_df, asset_lookups_df, left_on='Asset', right_on='name', how='left')
 
 #iterate through joined data, submitting new annual data one asset at a time
@@ -268,6 +273,17 @@ iterate_json_return_id(funds, fund_ids_list, fund_names_list, 'id', 'name') #use
 funds_data_df=pd.DataFrame({'fundId':fund_ids_list, 'FundName': fund_names_list}) #we use this later after we read in the holdings
 if 'Fund name [Required]' in holdings_merged_annual_data_df:
     holdings_merged_annual_data_df.rename(columns={'Fund name [Required]':'Fund name'}, inplace=True)
+if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]':'outstandingAmountNative'}, inplace=True)
+if 'Outstanding amount Q1 [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]':'outstandingAmountNativeQ1'}, inplace=True)
+if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]':'outstandingAmountNativeQ2'}, inplace=True)
+if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]':'outstandingAmountNativeQ3'}, inplace=True)
+if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]':'outstandingAmountNativeQ4'}, inplace=True)
+
 funds_merged_annual_data_df = pd.merge(holdings_merged_annual_data_df,funds_data_df,left_on='Fund name', right_on='FundName', how='left')
 funds_merged_annual_data_df.rename(columns={'Year [Required]': 'year', 'Asset class [Required]':'assetClass', 'Currency [Required]':'currencyCode', 'Outstanding amount [Required]':'outstandingAmountNative'}, inplace=True)
 funds_merged_annual_data_df.drop(columns=['name','Fund name','FundName','Asset_x','Asset_y'], inplace=True)
