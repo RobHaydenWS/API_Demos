@@ -105,6 +105,7 @@ def get_asset_id(assetlist, searchterm):
     for assetrecord in assetlist:
         if searchterm==assetrecord['name']:
             return assetrecord['id']
+
 def rename_scope_overrides(data_df):
     sc2_col1='Scope 2, location-based override (tCO₂e) [Optional]'
     sc2_col2='Scope 2, location - based override PCAF score[Optional]'
