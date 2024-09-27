@@ -12,7 +12,7 @@ fundsFile = 'Funds.xlsx'
 assetsFile = 'assets sample.xlsx'
 annualDataFile = 'annual data sample.xlsx'
 holdingsFile = 'asset holdings sample.xlsx'
-#all files need to be Excel with a sheet called "for Import" as per the downloadable templates
+#all files need to be Excel with a sheet called "For import" as per the downloadable templates
 
 print (USER_FOLDER)
 print (TOKEN)
