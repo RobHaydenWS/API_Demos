@@ -150,9 +150,7 @@ def rename_scope_overrides(data_df):
         else:
             subscopetext = str(subscopenum)
         column_name = 'Scope 3.' + str(subscopenum) + ' override (tCO₂e) [Optional]'
-        print (column_name)
         api_column_name = 'scope3' + subscopetext + 'Override' + 'Tco2e'
-        print (api_column_name)
         if column_name in data_df.columns:
             data_df.rename(columns={column_name: api_column_name}, inplace=True)
 
@@ -228,7 +226,7 @@ rename_scope_overrides(annual_data_df)
 
 annual_data_df['valueNative'] = annual_data_df['valueNative'].apply(clean_numeric_string)
 annual_data_df['valueNative'] = annual_data_df['valueNative'].astype('float')
-#annual_data_df['scope3OverrideKind'] = annual_data_df['scope3OverrideKind'].apply(replace_empty_values)
+annual_data_df['scope3OverrideKind'] = annual_data_df['scope3OverrideKind'].apply(replace_empty_values)
 
 #This requires the assetID but only contains the asset name. IDI does this matching for us but the API doesn't, so need to retrieve the full list of assets first
 assets_json = get('v1/finance/asset-corporates?limit=' + limit)
@@ -297,16 +295,16 @@ if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
     holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]': 'outstandingAmountNative'},
                                           inplace=True)
 if 'Outstanding amount Q1 [Optional]' in holdings_merged_annual_data_df:
-    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]': 'outstandingAmountNativeQ1'},
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount Q1 [Optional]': 'outstandingAmountNativeQ1'},
                                           inplace=True)
-if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
-    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]': 'outstandingAmountNativeQ2'},
+if 'Outstanding amount Q2 [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount Q2 [Optional]': 'outstandingAmountNativeQ2'},
                                           inplace=True)
-if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
-    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]': 'outstandingAmountNativeQ3'},
+if 'Outstanding amount Q3 [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount Q3 [Optional]': 'outstandingAmountNativeQ3'},
                                           inplace=True)
-if 'Outstanding amount [Optional]' in holdings_merged_annual_data_df:
-    holdings_merged_annual_data_df.rename(columns={'Outstanding amount [Optional]': 'outstandingAmountNativeQ4'},
+if 'Outstanding amount Q4 [Optional]' in holdings_merged_annual_data_df:
+    holdings_merged_annual_data_df.rename(columns={'Outstanding amount Q4 [Optional]': 'outstandingAmountNativeQ4'},
                                           inplace=True)
 
 funds_merged_annual_data_df = pd.merge(holdings_merged_annual_data_df, funds_data_df, left_on='Fund name',
