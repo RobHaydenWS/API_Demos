@@ -5,6 +5,7 @@ Extract_Footprint uses the reporting API to download a footprint file and unzip
 Finance_Ingestion uses the Finance API to automate the uploading of 4 required files.
 
 All csv files were AI & random number generated and do not represent real organisations. Note: Current version of the finance_ingestion script does NOT use these and uses xlsx files.
+
 API key is set with
 export DEMO_API_KEY=
 location of data files to import is defined by another env variable
