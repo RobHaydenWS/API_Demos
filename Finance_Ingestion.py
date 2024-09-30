@@ -117,17 +117,22 @@ def get_asset_id(assetlist, searchterm):
 
 
 def rename_scope_overrides(data_df):
+    #custom handling for any columns that don't adhere to a common pattern (including 3.05 and 3.11 !)
     sc2_col1 = 'Scope 2, location-based override (tCO₂e) [Optional]'
-    sc2_col2 = 'Scope 2, location - based override PCAF score[Optional]'
+    sc2_col2 = 'Scope 2, location-based override PCAF score[Optional]'
     sc2_col3 = 'Scope 2, market-based override (tCO₂e) [Optional]'
     sc2_col4 = 'Scope 2, market-based override PCAF score [Optional]'
+    sc3_col35 = 'Scope 3.5 override (tCO2e) [Optional]'
+    sc3_col311 = 'Scope 3.11 override (tCO2e) [Optional]'
     sc2_api1 = 'scope2LocationOverrideTco2e'
     sc2_api2 = 'scope2LocationOverridePcaf'
     sc2_api3 = 'scope2MarketOverrideTco2e'
     sc2_api4 = 'scope2MarketOverridePcaf'
+    sc3_api35 = 'scope305OverrideTco2e'
+    sc3_api311 = 'scope311OverrideTco2e'
     sc3_type = 'Scope 3 override kind [Required if a Scope 3 or Sub-scope 3 override is provided]'
     sc3_type_api = 'scope3OverrideKind'
-    data_df.rename(columns={sc2_col1: sc2_api1, sc2_col2: sc2_api2, sc2_col3: sc2_api3, sc2_col4: sc2_api4,
+    data_df.rename(columns={sc2_col1: sc2_api1, sc2_col2: sc2_api2, sc2_col3: sc2_api3, sc2_col4: sc2_api4, sc3_col35: sc3_api35, sc3_col311: sc3_api311,
                             sc3_type: sc3_type_api}, inplace=True)
 
     for scopenum in (1, 3):
@@ -139,15 +144,19 @@ def rename_scope_overrides(data_df):
             data_df.rename(columns={column_name: API_column_name}, inplace=True)
         if PCAF_column_name in data_df.columns:
             data_df.rename(columns={PCAF_column_name: PCAF_API_column_name}, inplace=True)
-    for subscopenum in range(1, 15):
-        if subscopenum < 10:
+    for subscopenum in range(1, 16):
+        if subscopenum <10:
             subscopetext = '0' + str(subscopenum)
         else:
             subscopetext = str(subscopenum)
-        column_name = 'Scope 3.' + str(subscopetext) + ' override (tCO₂e) [Optional]'
-        api_column_name = 'scope3' + str(subscopetext) + 'Override' + 'Tco2e'
+        column_name = 'Scope 3.' + str(subscopenum) + ' override (tCO₂e) [Optional]'
+        print (column_name)
+        api_column_name = 'scope3' + subscopetext + 'Override' + 'Tco2e'
+        print (api_column_name)
         if column_name in data_df.columns:
             data_df.rename(columns={column_name: api_column_name}, inplace=True)
+
+
 
 
 #First, retrieve the ids of all existing funds in order to DELETE all of them
@@ -202,6 +211,7 @@ iterate_json(assets_years_json, 'delete', 'asset-years/')
 
 #Sixth, POST new Annual Data from excel - this is more complex than the previous two uploads because we have to find out and match the asset IDs created automatically during step 4 above, we can't just use their names like IDI
 annual_data_df = pd.read_excel(USER_FOLDER + annualDataFile, sheet_name='For import')
+#rename pretty much every column because the excel and api use different naming
 if 'Asset name [Required]' in annual_data_df.columns:
     assets_df.rename(columns={'Asset name [Required]': 'name'}, inplace=True)
 if 'Currency [Required]' in annual_data_df.columns:
@@ -214,19 +224,19 @@ if 'Asset value [Required to calculate financed emissions for all asset classes 
     annual_data_df.rename(columns={
         'Asset value [Required to calculate financed emissions for all asset classes but commercial lines of insurance]': 'valueNative'},
                           inplace=True)
-
 rename_scope_overrides(annual_data_df)
 
 annual_data_df['valueNative'] = annual_data_df['valueNative'].apply(clean_numeric_string)
 annual_data_df['valueNative'] = annual_data_df['valueNative'].astype('float')
-annual_data_df['scope3OverrideKind'] = annual_data_df['scope3OverrideKind'].apply(replace_empty_values)
+#annual_data_df['scope3OverrideKind'] = annual_data_df['scope3OverrideKind'].apply(replace_empty_values)
+
 #This requires the assetID but only contains the asset name. IDI does this matching for us but the API doesn't, so need to retrieve the full list of assets first
 assets_json = get('v1/finance/asset-corporates?limit=' + limit)
 assets_ids_list = []
-assets_names_list = []  # set up a new dataframe to populate with ids and another list to hold the matching names
+assets_names_list = []  # set up a new dataframe to populate with asset ids and another list to hold the matching names
 iterate_json_return_id(assets_json, assets_ids_list, assets_names_list, 'id',
                        'name')  #use a tweaked iterate json function to populate the two aligned lists
-#merge the two columns together
+#merge the two columns together into a new 2 column dataframe which will be used to lookup on name in order to upload the right asset id (kind of AAF but that's what the API needs)
 asset_lookups_df = pd.DataFrame({'assetCorporateId': assets_ids_list, 'name': assets_names_list})
 # there HAS to be an easier way to do the above, just pulling two columns directly out of json nested records?
 
@@ -250,16 +260,7 @@ Holdings = get(f'v1/finance/asset-holdings?limit=' + limit)
 iterate_json(Holdings, 'delete', 'asset-holdings/')
 
 #Eighth and final step - POST new Holdings Data from csv - customisation here for e.g. LTV percentages instead of absolutes, would require retrieval of annual data first to get values
-#This requires building a table for upload that includes assetyear (which does not include name!) and assets (which does)
-
-#Pull a list of assets to get the asset IDs in order to match to both years and holdings (adapted to use asset years from REST not file)
-#assets = get('v1/finance/asset-corporates?limit='+limit)
-#assets_ids_list=[]
-#assets_names_list=[] # set up a new dataframe to populate with ids and another list to hold the matching names
-#iterate_json_return_id(assets, assets_ids_list, assets_names_list, 'id', 'name') #use a tweaked iterate json function to populate the two lists - key_to_check field may not be needed?
-#merge the two columns together
-#asset_lookups = pd.DataFrame({'assetCorporateId': assets_ids_list, 'name': assets_names_list})
-#NOTE: commented out the 6 lines above as assets and related objects up to asset_lookups should not have changed since annual_data step above.
+#This requires building a table for upload that joins assetyear (which does not include name!) and assets (which does)
 print('Get Asset Year IDs')
 asset_years_data_json = get(f'v1/finance/asset-years?limit=' + limit)
 assets_ids_list = []
@@ -280,7 +281,7 @@ if 'Asset name [Required]' in annual_holdings_df:
 holdings_merged_annual_data_df = pd.merge(merged_annual_data_df, annual_holdings_df, left_on='name', right_on='Asset',
                                           how='left')
 
-### add the fund id last once you get holdings data which includes Fund name!!
+### add the fund id last once you get holdings data which includes Fund name!
 # join funds data returned from REST call with existing asset & annual data created above
 print('Retrieving funds to provide IDs for upload')
 funds = get('v1/finance/funds?limit=' + limit)
