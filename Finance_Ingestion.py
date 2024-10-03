@@ -164,9 +164,7 @@ iterate_json(Funds, 'delete', 'funds/')
 print(f'posting new funds list from ', USER_FOLDER + fundsFile)
 
 #Second, POST new funds from excel files
-
 funds_df = pd.read_excel(USER_FOLDER + fundsFile, sheet_name='For import')
-print(funds_df.columns)
 
 if 'Fund name [Required]' in funds_df.columns:
     funds_df.rename(columns={'Fund name [Required]': 'name'}, inplace=True)
@@ -278,7 +276,6 @@ holdings_merged_annual_data_df = pd.merge(annual_data_assets_lookup_df, annual_h
                                           how='left')
 # Specific example handling for a demo, will not be applied to standard template data
 if 'Attribution Factor 1 - Ownership' in holdings_merged_annual_data_df.columns:
-    print ("found special 17c case")
     holdings_merged_annual_data_df['Attribution Factor 1 - Ownership'] =  holdings_merged_annual_data_df['Attribution Factor 1 - Ownership'].apply(replace_empty_attributionfactor1)
     holdings_merged_annual_data_df["outstandingAmountNative"]=holdings_merged_annual_data_df['valueNative']*holdings_merged_annual_data_df["Attribution Factor 1 - Ownership"]*holdings_merged_annual_data_df["Attribution Factor 2 - LTV"]
 
